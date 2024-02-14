@@ -1,5 +1,7 @@
 package com.xuhh.shortlink.admin.controller;
 
+import com.xuhh.shortlink.admin.common.convention.result.Result;
+import com.xuhh.shortlink.admin.common.convention.result.Results;
 import com.xuhh.shortlink.admin.dto.resp.UserRespDTO;
 import com.xuhh.shortlink.admin.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +22,7 @@ public class UserController {
      */
 
     @GetMapping("/api/shortlink/v1/user/{username}")
-    public UserRespDTO getUserByUsername(@PathVariable("username") String username) {
-        return userService.getUserByUsername(username);
+    public Result<UserRespDTO> getUserByUsername(@PathVariable("username") String username) {
+        return Results.success(userService.getUserByUsername(username));
     }
 }
