@@ -29,7 +29,7 @@ public class UserController {
     }
 
     /**
-     * 根据用户名查询无脱敏用户信息
+     * 根据用户名查询无脱敏7用户信息
      */
     @GetMapping("/api/shortlink/v1/actual/user/{username}")
     public Result<UserActualRespDTO> getActualUserByUsername(@PathVariable("username") String username) {
