@@ -52,7 +52,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 
     @Override
     public void register(UserRegisterReqDTO userRegisterReqDTO) {
-        if (!userRegisterCachePenetrationBloomFilter.contains(userRegisterReqDTO.getUsername())) {
+        if (!hasUsername(userRegisterReqDTO.getUsername())) {
             throw new ClientException(USER_NAME_EXIST);
         }
         RLock lock = redissonClient.getLock(LOCK_USER_REGISTER_KEY + userRegisterReqDTO.getUsername());
