@@ -1,22 +1,33 @@
 package com.xuhh.shortlink.admin.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.xuhh.shortlink.admin.common.convention.exception.ClientException;
 import com.xuhh.shortlink.admin.common.convention.exception.ServiceException;
 import com.xuhh.shortlink.admin.common.enums.UserErrorCodeEnum;
 import com.xuhh.shortlink.admin.dao.entity.UserDO;
 import com.xuhh.shortlink.admin.dao.mapper.UserMapper;
+import com.xuhh.shortlink.admin.dto.req.UserRegisterReqDTO;
 import com.xuhh.shortlink.admin.dto.resp.UserRespDTO;
 import com.xuhh.shortlink.admin.service.UserService;
+import org.redisson.api.RBloomFilter;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import static com.xuhh.shortlink.admin.common.enums.UserErrorCodeEnum.USER_NAME_EXIST;
+import static com.xuhh.shortlink.admin.common.enums.UserErrorCodeEnum.USER_SAVE_ERROR;
 
 /**
  * 用户接口实现层
  */
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements UserService {
+    @Autowired
+    private RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
+
     public UserRespDTO getUserByUsername(String username) {
         LambdaQueryWrapper<UserDO> queryWrapper = Wrappers.lambdaQuery(UserDO.class).eq(UserDO::getUsername, username);
         UserDO userDO = baseMapper.selectOne(queryWrapper);
@@ -26,5 +37,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         UserRespDTO result = new UserRespDTO();
         BeanUtils.copyProperties(userDO, result);
         return result;
+    }
+
+    @Override
+    public Boolean hasUsername(String username) {
+        return !userRegisterCachePenetrationBloomFilter.contains(username);
+    }
+
+    @Override
+    public void register(UserRegisterReqDTO userRegisterReqDTO) {
+        if (!userRegisterCachePenetrationBloomFilter.contains(userRegisterReqDTO.getUsername())) {
+            throw new ClientException(USER_NAME_EXIST);
+        }
+        int count = baseMapper.insert(BeanUtil.toBean(userRegisterReqDTO, UserDO.class));
+        if (count < 1) {
+            throw new ServiceException(USER_SAVE_ERROR);
+        }
+        userRegisterCachePenetrationBloomFilter.add(userRegisterReqDTO.getUsername());
     }
 }
