@@ -13,4 +13,9 @@ public class UserLoginReqDTO {
      * 密码
      */
     private String password;
+
+    /**
+     * token
+     */
+    private String token;
 }
