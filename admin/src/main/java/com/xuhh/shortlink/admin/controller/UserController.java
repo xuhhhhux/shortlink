@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.xuhh.shortlink.admin.common.convention.result.Result;
 import com.xuhh.shortlink.admin.common.convention.result.Results;
 import com.xuhh.shortlink.admin.dto.req.UserRegisterReqDTO;
+import com.xuhh.shortlink.admin.dto.req.UserUpdateReqDTO;
 import com.xuhh.shortlink.admin.dto.resp.UserActualRespDTO;
 import com.xuhh.shortlink.admin.dto.resp.UserRespDTO;
 import com.xuhh.shortlink.admin.service.UserService;
@@ -49,6 +50,15 @@ public class UserController {
     @PostMapping("/api/short-link/v1/user")
     public Result<Void> register(@RequestBody UserRegisterReqDTO userRegisterReqDTO) {
         userService.register(userRegisterReqDTO);
+        return Results.success();
+    }
+
+    /**
+     * 根据用户名修改用户信息
+     */
+    @PutMapping("/api/short-link/v1/user")
+    public Result<Void> update(@RequestBody UserUpdateReqDTO userUpdateReqDTO) {
+        userService.update(userUpdateReqDTO);
         return Results.success();
     }
 }

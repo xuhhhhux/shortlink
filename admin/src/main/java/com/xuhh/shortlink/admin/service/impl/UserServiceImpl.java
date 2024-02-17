@@ -10,6 +10,7 @@ import com.xuhh.shortlink.admin.common.enums.UserErrorCodeEnum;
 import com.xuhh.shortlink.admin.dao.entity.UserDO;
 import com.xuhh.shortlink.admin.dao.mapper.UserMapper;
 import com.xuhh.shortlink.admin.dto.req.UserRegisterReqDTO;
+import com.xuhh.shortlink.admin.dto.req.UserUpdateReqDTO;
 import com.xuhh.shortlink.admin.dto.resp.UserRespDTO;
 import com.xuhh.shortlink.admin.service.UserService;
 import org.redisson.api.RBloomFilter;
@@ -20,8 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import static com.xuhh.shortlink.admin.common.constant.RedisConstant.LOCK_USER_REGISTER_KEY;
-import static com.xuhh.shortlink.admin.common.enums.UserErrorCodeEnum.USER_NAME_EXIST;
-import static com.xuhh.shortlink.admin.common.enums.UserErrorCodeEnum.USER_SAVE_ERROR;
+import static com.xuhh.shortlink.admin.common.enums.UserErrorCodeEnum.*;
 
 /**
  * 用户接口实现层
@@ -68,6 +68,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
             throw new ClientException(USER_NAME_EXIST);
         } finally {
             lock.unlock();
+        }
+    }
+
+    @Override
+    public void update(UserUpdateReqDTO userUpdateReqDTO) {
+        // TODO 判断是否是用户自己
+        LambdaQueryWrapper<UserDO> queryWrapper = Wrappers.lambdaQuery(UserDO.class).eq(UserDO::getUsername, userUpdateReqDTO.getUsername());
+        int count = baseMapper.update(BeanUtil.toBean(userUpdateReqDTO, UserDO.class), queryWrapper);
+        if (count < 1) {
+            throw new ServiceException(USER_UPDATE_ERROR);
         }
     }
 }
