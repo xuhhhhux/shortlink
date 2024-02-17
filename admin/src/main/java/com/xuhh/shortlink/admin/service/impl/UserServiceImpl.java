@@ -13,10 +13,13 @@ import com.xuhh.shortlink.admin.dto.req.UserRegisterReqDTO;
 import com.xuhh.shortlink.admin.dto.resp.UserRespDTO;
 import com.xuhh.shortlink.admin.service.UserService;
 import org.redisson.api.RBloomFilter;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import static com.xuhh.shortlink.admin.common.constant.RedisConstant.LOCK_USER_REGISTER_KEY;
 import static com.xuhh.shortlink.admin.common.enums.UserErrorCodeEnum.USER_NAME_EXIST;
 import static com.xuhh.shortlink.admin.common.enums.UserErrorCodeEnum.USER_SAVE_ERROR;
 
@@ -27,6 +30,9 @@ import static com.xuhh.shortlink.admin.common.enums.UserErrorCodeEnum.USER_SAVE_
 public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements UserService {
     @Autowired
     private RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
+
+    @Autowired
+    private RedissonClient redissonClient;
 
     public UserRespDTO getUserByUsername(String username) {
         LambdaQueryWrapper<UserDO> queryWrapper = Wrappers.lambdaQuery(UserDO.class).eq(UserDO::getUsername, username);
@@ -49,10 +55,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         if (!userRegisterCachePenetrationBloomFilter.contains(userRegisterReqDTO.getUsername())) {
             throw new ClientException(USER_NAME_EXIST);
         }
-        int count = baseMapper.insert(BeanUtil.toBean(userRegisterReqDTO, UserDO.class));
-        if (count < 1) {
-            throw new ServiceException(USER_SAVE_ERROR);
+        RLock lock = redissonClient.getLock(LOCK_USER_REGISTER_KEY + userRegisterReqDTO.getUsername());
+        try {
+            if (lock.tryLock()) {
+                int count = baseMapper.insert(BeanUtil.toBean(userRegisterReqDTO, UserDO.class));
+                if (count < 1) {
+                    throw new ServiceException(USER_SAVE_ERROR);
+                }
+                userRegisterCachePenetrationBloomFilter.add(userRegisterReqDTO.getUsername());
+                return;
+            }
+            throw new ClientException(USER_NAME_EXIST);
+        } finally {
+            lock.unlock();
         }
-        userRegisterCachePenetrationBloomFilter.add(userRegisterReqDTO.getUsername());
     }
 }
