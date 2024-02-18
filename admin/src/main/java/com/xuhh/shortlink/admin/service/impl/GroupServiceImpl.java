@@ -8,6 +8,7 @@ import com.xuhh.shortlink.admin.common.biz.user.UserContext;
 import com.xuhh.shortlink.admin.common.convention.exception.ClientException;
 import com.xuhh.shortlink.admin.dao.entity.GroupDO;
 import com.xuhh.shortlink.admin.dao.mapper.GroupMapper;
+import com.xuhh.shortlink.admin.dto.req.ShortLinkGroupSortReqDTO;
 import com.xuhh.shortlink.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import com.xuhh.shortlink.admin.dto.resp.ShortLinkGroupRespDTO;
 import com.xuhh.shortlink.admin.service.GroupService;
@@ -76,5 +77,20 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         GroupDO groupDO = new GroupDO();
         groupDO.setDelFlag(1);
         baseMapper.update(groupDO, queryWrapper);
+    }
+
+    @Override
+    public void sortGroup(List<ShortLinkGroupSortReqDTO> shortLinkGroupSortReqDTOS) {
+        shortLinkGroupSortReqDTOS.forEach(each -> {
+            // TODO 用户名
+            GroupDO groupDO = GroupDO.builder()
+                    .sortOrder(each.getSortOrder())
+                    .build();
+            LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
+                    .eq(GroupDO::getGid, each.getGid())
+                    .eq(GroupDO::getDelFlag, 0)
+                    .eq(GroupDO::getUsername, UserContext.getUsername());
+            baseMapper.update(groupDO, queryWrapper);
+        });
     }
 }
