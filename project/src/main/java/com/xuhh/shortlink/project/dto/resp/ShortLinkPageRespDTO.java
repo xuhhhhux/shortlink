@@ -1,24 +1,14 @@
-package com.xuhh.shortlink.project.dao.entity;
+package com.xuhh.shortlink.project.dto.resp;
 
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.xuhh.shortlink.project.common.database.BaseDO;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
 /**
- * 短链接持久层实体类
+ * 短链接分页查询响应对象
  */
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@TableName("t_link")
-public class ShortLinkDO extends BaseDO {
+public class ShortLinkPageRespDTO {
     /**
      * id
      */
@@ -43,11 +33,6 @@ public class ShortLinkDO extends BaseDO {
      * 原始链接
      */
     private String originUrl;
-
-    /**
-     * 点击量
-     */
-    private Integer clickNum;
 
     /**
      * 分组标识
@@ -77,7 +62,6 @@ public class ShortLinkDO extends BaseDO {
     /**
      * 描述
      */
-    @TableField("`describe`")
     private String describe;
 
     /**
