@@ -1,5 +1,6 @@
 package com.xuhh.shortlink.project.dao.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.xuhh.shortlink.project.common.database.BaseDO;
@@ -57,6 +58,7 @@ public class ShortLinkDO extends BaseDO {
     /**
      * 启用标识 0：未启用 1：已启用
      */
+    @TableField(fill = FieldFill.INSERT)
     private Integer enableStatus;
 
     /**
