@@ -32,6 +32,11 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
 
     @Override
     public void saveGroup(String groupName) {
+        saveGroup(UserContext.getUsername(), groupName);
+    }
+
+    @Override
+    public void saveGroup(String username, String groupName) {
         String gid = null;
         GroupDO checkGroupDO = null;
         do {
@@ -39,12 +44,12 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
             // TODO 获取用户名
             LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
                     .eq(GroupDO::getGid, gid)
-                    .eq(GroupDO::getUsername, UserContext.getUsername());
+                    .eq(GroupDO::getUsername, username);
             checkGroupDO = baseMapper.selectOne(queryWrapper);
         } while (checkGroupDO != null);
         GroupDO groupDO = GroupDO.builder()
                 .gid(gid)
-                .username(UserContext.getUsername())
+                .username(username)
                 .name(groupName)
                 .sortOrder(0)
                 .build();

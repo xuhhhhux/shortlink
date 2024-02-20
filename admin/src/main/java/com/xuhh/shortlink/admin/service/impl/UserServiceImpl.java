@@ -16,6 +16,7 @@ import com.xuhh.shortlink.admin.dto.req.UserRegisterReqDTO;
 import com.xuhh.shortlink.admin.dto.req.UserUpdateReqDTO;
 import com.xuhh.shortlink.admin.dto.resp.UserLoginRespDTO;
 import com.xuhh.shortlink.admin.dto.resp.UserRespDTO;
+import com.xuhh.shortlink.admin.service.GroupService;
 import com.xuhh.shortlink.admin.service.UserService;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
@@ -40,6 +41,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    private GroupService groupService;
 
     @Autowired
     private RedissonClient redissonClient;
@@ -73,6 +77,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
                     throw new ServiceException(USER_SAVE_ERROR);
                 }
                 userRegisterCachePenetrationBloomFilter.add(userRegisterReqDTO.getUsername());
+                groupService.saveGroup(userRegisterReqDTO.getUsername(), "默认分组");
                 return;
             }
             throw new ClientException(USER_NAME_EXIST);
