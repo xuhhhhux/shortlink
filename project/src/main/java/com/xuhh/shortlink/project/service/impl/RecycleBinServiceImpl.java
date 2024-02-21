@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuhh.shortlink.project.dao.entity.ShortLinkDO;
 import com.xuhh.shortlink.project.dao.mapper.ShortLinkMapper;
+import com.xuhh.shortlink.project.dto.req.RecycleBinRecoverReqDTO;
 import com.xuhh.shortlink.project.dto.req.RecycleBinSaveReqDTO;
 import com.xuhh.shortlink.project.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.xuhh.shortlink.project.dto.resp.ShortLinkPageRespDTO;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import static com.xuhh.shortlink.project.common.constant.RedisConstant.GOTO_IS_NULL_SHORT_LINK_KEY;
 import static com.xuhh.shortlink.project.common.constant.RedisConstant.GOTO_SHORT_LINK_KEY;
 
 /**
@@ -49,5 +51,19 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
                 .eq(ShortLinkDO::getEnableStatus, 1);
         IPage<ShortLinkDO> resultPage = baseMapper.selectPage(shortLinkRecycleBinPageReqDTO, queryWrapper);
         return resultPage.convert(each -> BeanUtil.toBean(each, ShortLinkPageRespDTO.class));
+    }
+
+    @Override
+    public void recoverRecycleBin(RecycleBinRecoverReqDTO recycleBinRecoverReqDTO) {
+        LambdaQueryWrapper<ShortLinkDO> updateWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
+                .eq(ShortLinkDO::getGid, recycleBinRecoverReqDTO.getGid())
+                .eq(ShortLinkDO::getFullShortUrl, recycleBinRecoverReqDTO.getFullShortUrl())
+                .eq(ShortLinkDO::getEnableStatus, 1)
+                .eq(ShortLinkDO::getDelFlag, 0);
+        ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+                .enableStatus(0)
+                .build();
+        baseMapper.update(shortLinkDO, updateWrapper);
+        stringRedisTemplate.delete(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, recycleBinRecoverReqDTO.getFullShortUrl()));
     }
 }

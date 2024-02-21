@@ -2,11 +2,9 @@ package com.xuhh.shortlink.admin.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.xuhh.shortlink.admin.common.convention.result.Result;
+import com.xuhh.shortlink.admin.common.convention.result.Results;
 import com.xuhh.shortlink.admin.remote.ShortLinkRemoteService;
-import com.xuhh.shortlink.admin.remote.dto.req.RecycleBinSaveReqDTO;
-import com.xuhh.shortlink.admin.remote.dto.req.ShortLinkCreateReqDTO;
-import com.xuhh.shortlink.admin.remote.dto.req.ShortLinkPageReqDTO;
-import com.xuhh.shortlink.admin.remote.dto.req.ShortLinkRecycleBinPageReqDTO;
+import com.xuhh.shortlink.admin.remote.dto.req.*;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkPageRespDTO;
@@ -70,5 +68,14 @@ public class ShortLinkController {
     @GetMapping("/api/short-link/admin/v1/recycle-bin/page")
     public Result<IPage<ShortLinkPageRespDTO>> pageRecycleBinShortLink(ShortLinkRecycleBinPageReqDTO shortLinkRecycleBinPageReqDTO) {
         return recycleBinService.pageRecycleBinShortLink(shortLinkRecycleBinPageReqDTO);
+    }
+
+    /**
+     * 回收站恢复短链接
+     */
+    @PostMapping("/api/short-link/admin/v1/recycle-bin/recover")
+    public Result<Void> recoverRecycleBin(@RequestBody RecycleBinRecoverReqDTO recycleBinRecoverReqDTO) {
+        shortLinkRemoteService.recoverRecycleBin(recycleBinRecoverReqDTO);
+        return Results.success();
     }
 }
