@@ -132,6 +132,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         }
         boolean contains = shortLinkCreateCachePenetrationBloomFilter.contains(fullShortUrl);
         if (!contains) {
+            response.sendRedirect("/page/notfound");
             // TODO 布隆过滤器误判
             return;
         }
@@ -154,6 +155,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(hasQueryWrapper);
             if (shortLinkGotoDO == null) {
                 stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl), "#", 30, TimeUnit.SECONDS);
+                response.sendRedirect("/page/notfound");
                 return;
             }
             LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
@@ -164,6 +166,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             ShortLinkDO shortLinkDO = baseMapper.selectOne(queryWrapper);
             if (shortLinkDO.getValidDate() != null && shortLinkDO.getValidDate().before(new Date())) {
                 stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl), "#", 30, TimeUnit.SECONDS);
+                response.sendRedirect("/page/notfound");
+                return;
             }
             if (shortLinkGotoDO != null) {
                 stringRedisTemplate.opsForValue().set(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl),
