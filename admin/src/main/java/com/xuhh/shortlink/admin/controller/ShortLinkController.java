@@ -3,6 +3,7 @@ package com.xuhh.shortlink.admin.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.xuhh.shortlink.admin.common.convention.result.Result;
 import com.xuhh.shortlink.admin.remote.ShortLinkRemoteService;
+import com.xuhh.shortlink.admin.remote.dto.req.RecycleBinSaveReqDTO;
 import com.xuhh.shortlink.admin.remote.dto.req.ShortLinkCreateReqDTO;
 import com.xuhh.shortlink.admin.remote.dto.req.ShortLinkPageReqDTO;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
@@ -46,5 +47,13 @@ public class ShortLinkController {
     @GetMapping("/api/short-link/admin/v1/title")
     public Result<String> getTitleByUrl(@RequestParam("url") String url) {
         return shortLinkRemoteService.getTitleByUrl(url);
+    }
+
+    /**
+     * 删除短链接到回收站
+     */
+    @PostMapping("/api/short-link/admin/v1/recycle-bin/save")
+    public Result<Void> saveRecycleBin(@RequestBody RecycleBinSaveReqDTO recycleBinSaveReqDTO) {
+        return shortLinkRemoteService.saveRecycleBin(recycleBinSaveReqDTO);
     }
 }
