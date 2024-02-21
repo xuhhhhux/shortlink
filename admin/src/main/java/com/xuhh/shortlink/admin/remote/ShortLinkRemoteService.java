@@ -9,6 +9,7 @@ import com.xuhh.shortlink.admin.common.convention.result.Results;
 import com.xuhh.shortlink.admin.remote.dto.req.RecycleBinSaveReqDTO;
 import com.xuhh.shortlink.admin.remote.dto.req.ShortLinkCreateReqDTO;
 import com.xuhh.shortlink.admin.remote.dto.req.ShortLinkPageReqDTO;
+import com.xuhh.shortlink.admin.remote.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkPageRespDTO;
@@ -83,5 +84,20 @@ public interface ShortLinkRemoteService {
     default Result<Void> saveRecycleBin(@RequestBody RecycleBinSaveReqDTO recycleBinSaveReqDTO) {
         String resultStr = HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/save", JSON.toJSONString(recycleBinSaveReqDTO));
         return Results.success();
+    }
+
+    /**
+     * 短链接回收站分页查询
+     * @param shortLinkPageReqDTO
+     * @return
+     */
+    default Result<IPage<ShortLinkPageRespDTO>> pageRecycleBinShortLink(ShortLinkRecycleBinPageReqDTO shortLinkRecycleBinPageReqDTO) {
+        Map<String, Object> requestMap = new HashMap<>();
+        requestMap.put("gids", shortLinkRecycleBinPageReqDTO.getGids());
+        requestMap.put("current", shortLinkRecycleBinPageReqDTO.getCurrent());
+        requestMap.put("size", shortLinkRecycleBinPageReqDTO.getSize());
+        String resultStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/page", requestMap);
+        return JSON.parseObject(resultStr, new TypeReference<>() {
+        });
     }
 }

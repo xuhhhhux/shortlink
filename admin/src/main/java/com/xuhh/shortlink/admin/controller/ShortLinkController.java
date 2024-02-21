@@ -6,9 +6,12 @@ import com.xuhh.shortlink.admin.remote.ShortLinkRemoteService;
 import com.xuhh.shortlink.admin.remote.dto.req.RecycleBinSaveReqDTO;
 import com.xuhh.shortlink.admin.remote.dto.req.ShortLinkCreateReqDTO;
 import com.xuhh.shortlink.admin.remote.dto.req.ShortLinkPageReqDTO;
+import com.xuhh.shortlink.admin.remote.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkPageRespDTO;
+import com.xuhh.shortlink.admin.service.RecycleBinService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +20,10 @@ import java.util.List;
 public class ShortLinkController {
     private ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {
     };
+
+    @Autowired
+    private RecycleBinService recycleBinService;
+
     /**
      * 创建短链接
      */
@@ -55,5 +62,13 @@ public class ShortLinkController {
     @PostMapping("/api/short-link/admin/v1/recycle-bin/save")
     public Result<Void> saveRecycleBin(@RequestBody RecycleBinSaveReqDTO recycleBinSaveReqDTO) {
         return shortLinkRemoteService.saveRecycleBin(recycleBinSaveReqDTO);
+    }
+
+    /**
+     * 短链接回收站分页查询
+     */
+    @GetMapping("/api/short-link/admin/v1/recycle-bin/page")
+    public Result<IPage<ShortLinkPageRespDTO>> pageRecycleBinShortLink(ShortLinkRecycleBinPageReqDTO shortLinkRecycleBinPageReqDTO) {
+        return recycleBinService.pageRecycleBinShortLink(shortLinkRecycleBinPageReqDTO);
     }
 }
