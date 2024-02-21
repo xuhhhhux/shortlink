@@ -33,9 +33,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
-import static com.xuhh.shortlink.project.common.constant.RedisConstant.GOTO_SHORT_LINK_KEY;
-import static com.xuhh.shortlink.project.common.constant.RedisConstant.LOCK_GOTO_SHORT_LINK_KEY;
+import static com.xuhh.shortlink.project.common.constant.RedisConstant.*;
 
 /**
  * 短链接管理接口实现层
@@ -124,6 +124,16 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             response.sendRedirect(originUrl);
             return;
         }
+        boolean contains = shortLinkCreateCachePenetrationBloomFilter.contains(fullShortUrl);
+        if (!contains) {
+            // TODO 布隆过滤器误判
+            return;
+        }
+
+        String isNull = stringRedisTemplate.opsForValue().get(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl));
+        if (isNull != null) {
+            return;
+        }
 
         RLock lock = redissonClient.getLock(String.format(LOCK_GOTO_SHORT_LINK_KEY, fullShortUrl));
         lock.lock();
@@ -137,7 +147,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .eq(ShortLinkGotoDO::getFullShortUrl, fullShortUrl);
             ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(hasQueryWrapper);
             if (shortLinkGotoDO == null) {
-                // TODO 封控
+                stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl), "#", 30, TimeUnit.SECONDS);
                 return;
             }
             LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
