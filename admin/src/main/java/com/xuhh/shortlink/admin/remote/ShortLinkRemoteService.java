@@ -10,6 +10,7 @@ import com.xuhh.shortlink.admin.remote.dto.req.ShortLinkPageReqDTO;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkPageRespDTO;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +57,17 @@ public interface ShortLinkRemoteService {
         Map<String, Object> requestMap = new HashMap<>();
         requestMap.put("gids", gids);
         String resultStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/count", requestMap);
+        return JSON.parseObject(resultStr, new TypeReference<>() {
+        });
+    }
+
+    /**
+     * 根据url查询title
+     * @param url
+     * @return
+     */
+    default Result<String> getTitleByUrl(@RequestParam("url") String url) {
+        String resultStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/title?url=" + url);
         return JSON.parseObject(resultStr, new TypeReference<>() {
         });
     }

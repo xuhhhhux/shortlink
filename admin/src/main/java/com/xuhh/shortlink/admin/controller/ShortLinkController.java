@@ -39,4 +39,12 @@ public class ShortLinkController {
     public Result<List<ShortLinkGroupCountQueryRespDTO>> listGroupShortLinkCount(@RequestParam("gids") List<String> gids) {
         return shortLinkRemoteService.listGroupShortLinkCount(gids);
     }
+
+    /**
+     * 根据url获取title
+     */
+    @GetMapping("/api/short-link/admin/v1/title")
+    public Result<String> getTitleByUrl(@RequestParam("url") String url) {
+        return shortLinkRemoteService.getTitleByUrl(url);
+    }
 }
