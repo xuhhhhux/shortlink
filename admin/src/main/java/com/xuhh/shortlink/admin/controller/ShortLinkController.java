@@ -78,4 +78,14 @@ public class ShortLinkController {
         shortLinkRemoteService.recoverRecycleBin(recycleBinRecoverReqDTO);
         return Results.success();
     }
+
+
+    /**
+     * 回收站删除短链接
+     */
+    @PostMapping("/api/short-link/admin/v1/recycle-bin/remove")
+    public Result<Void> removeRecycleBin(@RequestBody RecycleBinRemoveReqDTO recycleBinRemoveReqDTO) {
+        shortLinkRemoteService.removeRecycleBin(recycleBinRemoveReqDTO);
+        return Results.success();
+    }
 }
