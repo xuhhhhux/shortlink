@@ -1,0 +1,18 @@
+### Example user template template
+### Example user template
+
+# IntelliJ project files
+out
+gen
+.class
+*/target/
+.idea
+*.iws
+*.iml
+*.ipr
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.DS_Store
