@@ -5,6 +5,9 @@ import com.xuhh.shortlink.project.dao.entity.LinkOsStatsDO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
+/**
+ * 操作系统统计持久层
+ */
 public interface LinkOsStatsMapper extends BaseMapper<LinkOsStatsDO> {
     @Update("INSERT INTO t_link_os_stats ( full_short_url, gid, date, cnt, os, create_time, update_time, del_flag ) " +
             "VALUES ( #{linkOsStatsDO.fullShortUrl}, #{linkOsStatsDO.gid}, #{linkOsStatsDO.date}, #{linkOsStatsDO.cnt}, #{linkOsStatsDO.os}, NOW(), NOW(), 0 ) " +
