@@ -303,7 +303,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .adcode(unknownFlag ? "未知" : localeResultObj.getString("adcode"))
                         .date(new Date())
                         .build();
-                linkLocaleStatsMapper.shortLinkStats(linkLocaleStatsDO);
+                linkLocaleStatsMapper.shortLinkLocaleState(linkLocaleStatsDO);
             }
 
             String os = getOs(request);
@@ -314,7 +314,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .cnt(1)
                     .os(os)
                     .build();
-            linkOsStatsMapper.shortLinkStats(linkOsStatsDO);
+            linkOsStatsMapper.shortLinkOsState(linkOsStatsDO);
 
             String browser = ShortLinkUtil.getBrowser(((HttpServletRequest) request));
             LinkBrowserStatsDO linkBrowserStatsDO = LinkBrowserStatsDO.builder()
