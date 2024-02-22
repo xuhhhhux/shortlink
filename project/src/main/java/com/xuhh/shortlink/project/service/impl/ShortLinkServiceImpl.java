@@ -49,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.xuhh.shortlink.project.common.constant.RedisConstant.*;
+import static com.xuhh.shortlink.project.util.ShortLinkUtil.getIp;
 
 /**
  * 短链接管理接口实现层
@@ -225,12 +226,16 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .findFirst()
                         .map(Cookie::getValue)
                         .ifPresentOrElse(each -> {
-                            Long added = stringRedisTemplate.opsForSet().add("short-link:stats:uv:" + fullShortUrl, each);
-                            uvFirstFlag.set(added != null && added > 0L);
+                            Long hasUv = stringRedisTemplate.opsForSet().add("short-link:stats:uv:" + fullShortUrl, each);
+                            uvFirstFlag.set(hasUv != null && hasUv > 0L);
                         }, addResponseCookieTask);
             } else {
                 addResponseCookieTask.run();
             }
+
+            String uip = getIp(request);
+            Long hasUip = stringRedisTemplate.opsForSet().add("short-link:stats:uip:" + fullShortUrl, uip);
+            boolean uipFirstFlag = hasUip != null && hasUip > 0L;
 
             if (StrUtil.isBlank(gid)) {
                 LambdaQueryWrapper<ShortLinkGotoDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkGotoDO.class)
@@ -246,7 +251,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .gid(gid)
                     .pv(1)
                     .uv(uvFirstFlag.get() ? 1 : 0)
-                    .uip(1)
+                    .uip(uipFirstFlag ? 1 : 0)
                     .hour(hour)
                     .weekday(weekday)
                     .date(new Date())
