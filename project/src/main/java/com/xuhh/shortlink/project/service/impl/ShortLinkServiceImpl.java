@@ -14,14 +14,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuhh.shortlink.project.common.convention.exception.ServiceException;
-import com.xuhh.shortlink.project.dao.entity.LinkAccessStatsDO;
-import com.xuhh.shortlink.project.dao.entity.LinkLocaleStatsDO;
-import com.xuhh.shortlink.project.dao.entity.ShortLinkDO;
-import com.xuhh.shortlink.project.dao.entity.ShortLinkGotoDO;
-import com.xuhh.shortlink.project.dao.mapper.LinkAccessStatsMapper;
-import com.xuhh.shortlink.project.dao.mapper.LinkLocaleStatsMapper;
-import com.xuhh.shortlink.project.dao.mapper.ShortLinkGotoMapper;
-import com.xuhh.shortlink.project.dao.mapper.ShortLinkMapper;
+import com.xuhh.shortlink.project.dao.entity.*;
+import com.xuhh.shortlink.project.dao.mapper.*;
 import com.xuhh.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import com.xuhh.shortlink.project.dto.req.ShortLinkPageReqDTO;
 import com.xuhh.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
@@ -57,6 +51,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static com.xuhh.shortlink.project.common.constant.RedisConstant.*;
 import static com.xuhh.shortlink.project.common.constant.ShortLinkConstant.AMAP_REMOTE_URL;
 import static com.xuhh.shortlink.project.util.ShortLinkUtil.getIp;
+import static com.xuhh.shortlink.project.util.ShortLinkUtil.getOs;
 
 /**
  * 短链接管理接口实现层
@@ -82,6 +77,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     @Autowired
     private LinkLocaleStatsMapper linkLocaleStatsMapper;
+
+    @Autowired
+    private LinkOsStatsMapper linkOsStatsMapper;
 
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLocaleAmapKey;
@@ -292,6 +290,16 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .build();
                 linkLocaleStatsMapper.shortLinkStats(linkLocaleStatsDO);
             }
+
+            String os = getOs(request);
+            LinkOsStatsDO linkOsStatsDO = LinkOsStatsDO.builder()
+                    .fullShortUrl(fullShortUrl)
+                    .gid(gid)
+                    .date(new Date())
+                    .cnt(1)
+                    .os(os)
+                    .build();
+            linkOsStatsMapper.shortLinkStats(linkOsStatsDO);
         } catch (Throwable ex) {
             log.error("短链接访问量统计异常", ex);
         }
