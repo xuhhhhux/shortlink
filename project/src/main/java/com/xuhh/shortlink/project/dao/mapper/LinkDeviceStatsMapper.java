@@ -1,10 +1,11 @@
 package com.xuhh.shortlink.project.dao.mapper;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.xuhh.shortlink.project.dao.entity.LinkDeviceStatsDO;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Param;
 
-public interface LinkDeviceStatsMapper {
+public interface LinkDeviceStatsMapper extends BaseMapper<LinkDeviceStatsDO> {
     /**
      * 记录访问设备监控数据
      */
