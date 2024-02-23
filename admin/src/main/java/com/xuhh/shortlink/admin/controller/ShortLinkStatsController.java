@@ -2,6 +2,7 @@ package com.xuhh.shortlink.admin.controller;
 
 import com.xuhh.shortlink.admin.common.convention.result.Result;
 import com.xuhh.shortlink.admin.remote.ShortLinkRemoteService;
+import com.xuhh.shortlink.admin.remote.dto.req.ShortLinkGroupStatsReqDTO;
 import com.xuhh.shortlink.admin.remote.dto.req.ShortLinkStatsReqDTO;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkStatsRespDTO;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,5 +26,13 @@ public class ShortLinkStatsController {
     @GetMapping("/api/short-link/admin/v1/stats")
     public Result<ShortLinkStatsRespDTO> shortLinkStats(ShortLinkStatsReqDTO requestParam) {
         return shortLinkRemoteService.oneShortLinkStats(requestParam);
+    }
+
+    /**
+     * 访问分组短链接指定时间内监控数据
+     */
+    @GetMapping("/api/short-link/admin/v1/stats/group")
+    public Result<ShortLinkStatsRespDTO> groupShortLinkStats(ShortLinkGroupStatsReqDTO requestParam) {
+        return shortLinkRemoteService.groupShortLinkStats(requestParam);
     }
 }
