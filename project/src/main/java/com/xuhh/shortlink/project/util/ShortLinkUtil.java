@@ -2,8 +2,11 @@ package com.xuhh.shortlink.project.util;
 
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.StrUtil;
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.Optional;
 
@@ -124,5 +127,22 @@ public class ShortLinkUtil {
         // 这里简单判断IP地址范围，您可能需要更复杂的逻辑
         // 例如，通过调用IP地址库或调用第三方服务来判断网络类型
         return actualIp.startsWith("192.168.") || actualIp.startsWith("10.") ? "WIFI" : "Mobile";
+    }
+
+    public static String extractDomain(String url) {
+        String domain = null;
+        try {
+            URI uri = new URI(url);
+            String host = uri.getHost();
+            if (StrUtil.isNotBlank(host)) {
+                domain = host;
+                if (domain.startsWith("www.")) {
+                    domain = host.substring(4);
+                }
+            }
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        return domain;
     }
 }
