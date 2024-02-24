@@ -16,7 +16,7 @@ public interface ShortLinkMapper extends BaseMapper<ShortLinkDO> {
      * 更新历史PV,UV,UIP
      */
     @Update("update t_link set total_pv = total_pv + #{pv}, total_uv = total_uv + #{uv}, total_uip = total_uip + #{uip} where full_short_url = #{fullShortUrl} and gid = #{gid}")
-    void updateStats(
+    void incrementStats(
             @Param("fullShortUrl") String fullShortUrl,
             @Param("gid") String gid,
             @Param("pv") Integer pv,

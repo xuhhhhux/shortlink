@@ -26,4 +26,5 @@ public class ShortLinkTest {
             System.out.printf(sql, i);
         }
     }
+
 }
