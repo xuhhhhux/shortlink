@@ -16,11 +16,17 @@ import com.xuhh.shortlink.admin.remote.ShortLinkRemoteService;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.xuhh.shortlink.admin.service.GroupService;
 import com.xuhh.shortlink.admin.util.RandomGenerator;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+
+import static com.xuhh.shortlink.admin.common.constant.RedisConstant.LOCK_GROUP_CREATE_KEY;
 
 /**
  * 短链接分组接口实现层
@@ -30,6 +36,12 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     private ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {
     };
 
+    @Autowired
+    private RedissonClient redissonClient;
+
+    @Value("${short-link.group.max-num}")
+    private Integer groupCreateMaxNum;
+
     @Override
     public void saveGroup(String groupName) {
         saveGroup(UserContext.getUsername(), groupName);
@@ -37,25 +49,37 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
 
     @Override
     public void saveGroup(String username, String groupName) {
-        String gid = null;
-        GroupDO checkGroupDO = null;
-        do {
-            gid = RandomGenerator.generateRandom();
-            // TODO 获取用户名
+        RLock lock = redissonClient.getLock(String.format(LOCK_GROUP_CREATE_KEY, username));
+        try {
+            lock.lock();
             LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
-                    .eq(GroupDO::getGid, gid)
                     .eq(GroupDO::getUsername, username);
-            checkGroupDO = baseMapper.selectOne(queryWrapper);
-        } while (checkGroupDO != null);
-        GroupDO groupDO = GroupDO.builder()
-                .gid(gid)
-                .username(username)
-                .name(groupName)
-                .sortOrder(0)
-                .build();
-        int count = baseMapper.insert(groupDO);
-        if (count < 1) {
-            throw new ClientException("新增短链接分组失败");
+            List<GroupDO> groupDOs = baseMapper.selectList(queryWrapper);
+            if (groupDOs != null && groupDOs.size() == groupCreateMaxNum) {
+                throw new ClientException(String.format("已超出最大分组数: %d", groupCreateMaxNum));
+            }
+            String gid = null;
+            GroupDO checkGroupDO = null;
+            do {
+                gid = RandomGenerator.generateRandom();
+                // TODO 获取用户名
+                LambdaQueryWrapper<GroupDO> userNameQueryWrapper = Wrappers.lambdaQuery(GroupDO.class)
+                        .eq(GroupDO::getGid, gid)
+                        .eq(GroupDO::getUsername, username);
+                checkGroupDO = baseMapper.selectOne(userNameQueryWrapper);
+            } while (checkGroupDO != null);
+            GroupDO groupDO = GroupDO.builder()
+                    .gid(gid)
+                    .username(username)
+                    .name(groupName)
+                    .sortOrder(0)
+                    .build();
+            int count = baseMapper.insert(groupDO);
+            if (count < 1) {
+                throw new ClientException("新增短链接分组失败");
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
