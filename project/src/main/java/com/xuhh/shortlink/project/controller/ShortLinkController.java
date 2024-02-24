@@ -3,8 +3,10 @@ package com.xuhh.shortlink.project.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.xuhh.shortlink.project.common.convention.result.Result;
 import com.xuhh.shortlink.project.common.convention.result.Results;
+import com.xuhh.shortlink.project.dto.req.ShortLinkBatchCreateReqDTO;
 import com.xuhh.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import com.xuhh.shortlink.project.dto.req.ShortLinkPageReqDTO;
+import com.xuhh.shortlink.project.dto.resp.ShortLinkBatchCreateRespDTO;
 import com.xuhh.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import com.xuhh.shortlink.project.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.xuhh.shortlink.project.dto.resp.ShortLinkPageRespDTO;
@@ -38,6 +40,14 @@ public class ShortLinkController {
     @PostMapping("/api/short-link/v1/create")
     public Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLinkCreateReqDTO shortLinkCreateReqDTO) {
         return Results.success(shortLinkService.createShortLink(shortLinkCreateReqDTO));
+    }
+
+    /**
+     * 批量创建短链接
+     */
+    @PostMapping("/api/short-link/v1/create/batch")
+    public Result<ShortLinkBatchCreateRespDTO> batchCreateShortLink(@RequestBody ShortLinkBatchCreateReqDTO requestParam) {
+        return Results.success(shortLinkService.batchCreateShortLink(requestParam));
     }
 
     /**

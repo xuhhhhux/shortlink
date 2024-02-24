@@ -3,12 +3,18 @@ package com.xuhh.shortlink.admin.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.xuhh.shortlink.admin.common.convention.result.Result;
 import com.xuhh.shortlink.admin.common.convention.result.Results;
+import com.xuhh.shortlink.admin.dto.req.ShortLinkBatchCreateReqDTO;
+import com.xuhh.shortlink.admin.dto.resp.ShortLinkBaseInfoRespDTO;
+import com.xuhh.shortlink.admin.dto.resp.ShortLinkBatchCreateRespDTO;
 import com.xuhh.shortlink.admin.remote.ShortLinkRemoteService;
 import com.xuhh.shortlink.admin.remote.dto.req.*;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkPageRespDTO;
 import com.xuhh.shortlink.admin.service.RecycleBinService;
+import com.xuhh.shortlink.admin.util.EasyExcelWebUtil;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +34,19 @@ public class ShortLinkController {
     @PostMapping("/api/short-link/admin/v1/create")
     public Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLinkCreateReqDTO shortLinkCreateReqDTO) {
         return shortLinkRemoteService.createShortLink(shortLinkCreateReqDTO);
+    }
+
+    /**
+     * 批量创建短链接
+     */
+    @SneakyThrows
+    @PostMapping("/api/short-link/admin/v1/create/batch")
+    public void batchCreateShortLink(@RequestBody ShortLinkBatchCreateReqDTO requestParam, HttpServletResponse response) {
+        Result<ShortLinkBatchCreateRespDTO> shortLinkBatchCreateRespDTOResult = shortLinkRemoteService.batchCreateShortLink(requestParam);
+        if (shortLinkBatchCreateRespDTOResult.isSuccess()) {
+            List<ShortLinkBaseInfoRespDTO> baseLinkInfos = shortLinkBatchCreateRespDTOResult.getData().getBaseLinkInfos();
+            EasyExcelWebUtil.write(response, "批量创建短链接-SaaS短链接系统", ShortLinkBaseInfoRespDTO.class, baseLinkInfos);
+        }
     }
 
     /**
