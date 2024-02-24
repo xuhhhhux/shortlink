@@ -50,6 +50,15 @@ public class ShortLinkController {
     }
 
     /**
+     * 修改短链接
+     */
+    @PostMapping("/api/short-link/admin/v1/update")
+    public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO requestParam) {
+        shortLinkRemoteService.updateShortLink(requestParam);
+        return Results.success();
+    }
+
+    /**
      * 分页查询短链接
      */
     @GetMapping("/api/short-link/admin/v1/page")

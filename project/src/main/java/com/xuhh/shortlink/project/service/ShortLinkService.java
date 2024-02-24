@@ -6,6 +6,7 @@ import com.xuhh.shortlink.project.dao.entity.ShortLinkDO;
 import com.xuhh.shortlink.project.dto.req.ShortLinkBatchCreateReqDTO;
 import com.xuhh.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import com.xuhh.shortlink.project.dto.req.ShortLinkPageReqDTO;
+import com.xuhh.shortlink.project.dto.req.ShortLinkUpdateReqDTO;
 import com.xuhh.shortlink.project.dto.resp.ShortLinkBatchCreateRespDTO;
 import com.xuhh.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import com.xuhh.shortlink.project.dto.resp.ShortLinkGroupCountQueryRespDTO;
@@ -34,6 +35,13 @@ public interface ShortLinkService extends IService<ShortLinkDO> {
      * @return 批量创建短链接返回参数
      */
     ShortLinkBatchCreateRespDTO batchCreateShortLink(ShortLinkBatchCreateReqDTO requestParam);
+
+    /**
+     * 修改短链接
+     *
+     * @param requestParam 修改短链接请求参数
+     */
+    void updateShortLink(ShortLinkUpdateReqDTO requestParam);
 
     /**
      * 短链接分页查询
