@@ -58,4 +58,9 @@ public class ShortLinkStatsRecordDTO {
      * UIP访问标识
      */
     private Boolean uipFirstFlag;
+
+    /**
+     * 处理幂等唯一id
+     */
+    private String messageKey;
 }
