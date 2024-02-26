@@ -142,13 +142,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             baseMapper.insert(shortLinkDO);
             shortLinkGotoMapper.insert(shortLinkGotoDO);
         } catch (DuplicateKeyException ex) {
-            LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
-                    .eq(ShortLinkDO::getFullShortUrl, fullShortUrl);
-            ShortLinkDO hasShortLinkDO = baseMapper.selectOne(queryWrapper);
-            if (hasShortLinkDO != null) {
-                log.warn("短链接: {} 重复入库", fullShortUrl);
-                throw new ServiceException("短链接生成重复");
-            }
+            throw new ServiceException(String.format("短链接: %s 生成重复", fullShortUrl));
         }
         stringRedisTemplate.opsForValue().set(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl),
                 shortLinkCreateReqDTO.getOriginUrl(),
@@ -503,7 +497,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         String suffix = null;
         boolean ok = false;
         for (int i = 0; i < 10; i++) {
-            originUrl += System.currentTimeMillis();
+            originUrl += UUID.randomUUID().toString();
             suffix = HashUtil.hashToBase62(originUrl);
             if (!shortLinkCreateCachePenetrationBloomFilter.contains(createShortLinkDefaultDomain + "/" + suffix)) {
                 ok = true;
