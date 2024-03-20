@@ -59,7 +59,7 @@ public class GroupController {
      * 排序短链接分组
      */
     @PostMapping("/api/short-link/admin/v1/group/sort")
-    public Result<Void> deleteGroup(@RequestBody List<ShortLinkGroupSortReqDTO> shortLinkGroupSortReqDTOS) {
+    public Result<Void> sortGroup(@RequestBody List<ShortLinkGroupSortReqDTO> shortLinkGroupSortReqDTOS) {
         groupService.sortGroup(shortLinkGroupSortReqDTOS);
         return Results.success();
     }
