@@ -121,6 +121,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         }
         Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(USER_LOGIN_KEY + username);
         if (CollUtil.isNotEmpty(entries)) {
+            stringRedisTemplate.expire(USER_LOGIN_KEY + username, 30L, TimeUnit.DAYS);
             String token = entries.keySet()
                     .stream()
                     .findFirst()
@@ -131,7 +132,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 
         String token = UUID.randomUUID().toString();
         stringRedisTemplate.opsForHash().put(USER_LOGIN_KEY + username, token, JSON.toJSONString(userDO));
-        // todo 登录有效期
         stringRedisTemplate.expire(USER_LOGIN_KEY + username, 30L, TimeUnit.DAYS);
 
         return new UserLoginRespDTO(token);
