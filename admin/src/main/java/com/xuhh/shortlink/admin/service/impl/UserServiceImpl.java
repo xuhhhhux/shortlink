@@ -75,6 +75,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         RLock lock = redissonClient.getLock(LOCK_USER_REGISTER_KEY + userRegisterReqDTO.getUsername());
         try {
             if (lock.tryLock()) {
+                // todo 如果插入数据库成功，但是插入布隆过滤器的时候宕机了，没插入到布隆过滤器怎么办？
                 int count = baseMapper.insert(BeanUtil.toBean(userRegisterReqDTO, UserDO.class));
                 if (count < 1) {
                     throw new ServiceException(USER_SAVE_ERROR);
