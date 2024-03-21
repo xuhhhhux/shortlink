@@ -2,13 +2,13 @@ package com.xuhh.shortlink.admin.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.xuhh.shortlink.admin.common.biz.user.UserContext;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuhh.shortlink.admin.common.convention.exception.ServiceException;
 import com.xuhh.shortlink.admin.common.convention.result.Result;
 import com.xuhh.shortlink.admin.dao.entity.GroupDO;
 import com.xuhh.shortlink.admin.dao.mapper.GroupMapper;
+import com.xuhh.shortlink.admin.remote.ShortLinkActualRemoteService;
 import com.xuhh.shortlink.admin.remote.ShortLinkRemoteService;
 import com.xuhh.shortlink.admin.remote.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkPageRespDTO;
@@ -27,19 +27,24 @@ public class RecycleBinServiceImpl implements RecycleBinService {
     };
 
     @Autowired
+    private ShortLinkActualRemoteService shortLinkActualRemoteService;
+
+    @Autowired
     private GroupMapper groupMapper;
 
 
     @Override
-    public Result<IPage<ShortLinkPageRespDTO>> pageRecycleBinShortLink(ShortLinkRecycleBinPageReqDTO shortLinkRecycleBinPageReqDTO) {
+    public Result<Page<ShortLinkPageRespDTO>> pageRecycleBinShortLink(ShortLinkRecycleBinPageReqDTO shortLinkRecycleBinPageReqDTO) {
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
-                .eq(GroupDO::getUsername, UserContext.getUsername())
+                .eq(GroupDO::getUsername, "xuhh")
                 .eq(GroupDO::getDelFlag, 0);
         List<GroupDO> groupDOs = groupMapper.selectList(queryWrapper);
         if (CollUtil.isEmpty(groupDOs)) {
             throw new ServiceException("用户分组信息");
         }
         shortLinkRecycleBinPageReqDTO.setGids(groupDOs.stream().map(GroupDO::getGid).toList());
-        return shortLinkRemoteService.pageRecycleBinShortLink(shortLinkRecycleBinPageReqDTO);
+        return shortLinkActualRemoteService.pageRecycleBinShortLink(shortLinkRecycleBinPageReqDTO.getGids(),
+                shortLinkRecycleBinPageReqDTO.getCurrent(),
+                shortLinkRecycleBinPageReqDTO.getSize());
     }
 }

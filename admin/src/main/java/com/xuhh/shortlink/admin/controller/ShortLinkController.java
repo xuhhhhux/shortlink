@@ -1,17 +1,18 @@
 package com.xuhh.shortlink.admin.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuhh.shortlink.admin.common.convention.result.Result;
 import com.xuhh.shortlink.admin.common.convention.result.Results;
 import com.xuhh.shortlink.admin.dto.req.ShortLinkBatchCreateReqDTO;
 import com.xuhh.shortlink.admin.dto.resp.ShortLinkBaseInfoRespDTO;
 import com.xuhh.shortlink.admin.dto.resp.ShortLinkBatchCreateRespDTO;
-import com.xuhh.shortlink.admin.remote.ShortLinkRemoteService;
-import com.xuhh.shortlink.admin.remote.dto.req.*;
+import com.xuhh.shortlink.admin.remote.ShortLinkActualRemoteService;
+import com.xuhh.shortlink.admin.remote.dto.req.ShortLinkCreateReqDTO;
+import com.xuhh.shortlink.admin.remote.dto.req.ShortLinkPageReqDTO;
+import com.xuhh.shortlink.admin.remote.dto.req.ShortLinkUpdateReqDTO;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.xuhh.shortlink.admin.remote.dto.resp.ShortLinkPageRespDTO;
-import com.xuhh.shortlink.admin.service.RecycleBinService;
 import com.xuhh.shortlink.admin.util.EasyExcelWebUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
@@ -22,18 +23,15 @@ import java.util.List;
 
 @RestController
 public class ShortLinkController {
-    private ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {
-    };
-
     @Autowired
-    private RecycleBinService recycleBinService;
+    private ShortLinkActualRemoteService shortLinkActualRemoteService;
 
     /**
      * 创建短链接
      */
     @PostMapping("/api/short-link/admin/v1/create")
     public Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLinkCreateReqDTO shortLinkCreateReqDTO) {
-        return shortLinkRemoteService.createShortLink(shortLinkCreateReqDTO);
+        return shortLinkActualRemoteService.createShortLink(shortLinkCreateReqDTO);
     }
 
     /**
@@ -42,7 +40,7 @@ public class ShortLinkController {
     @SneakyThrows
     @PostMapping("/api/short-link/admin/v1/create/batch")
     public void batchCreateShortLink(@RequestBody ShortLinkBatchCreateReqDTO requestParam, HttpServletResponse response) {
-        Result<ShortLinkBatchCreateRespDTO> shortLinkBatchCreateRespDTOResult = shortLinkRemoteService.batchCreateShortLink(requestParam);
+        Result<ShortLinkBatchCreateRespDTO> shortLinkBatchCreateRespDTOResult = shortLinkActualRemoteService.batchCreateShortLink(requestParam);
         if (shortLinkBatchCreateRespDTOResult.isSuccess()) {
             List<ShortLinkBaseInfoRespDTO> baseLinkInfos = shortLinkBatchCreateRespDTOResult.getData().getBaseLinkInfos();
             EasyExcelWebUtil.write(response, "批量创建短链接-SaaS短链接系统", ShortLinkBaseInfoRespDTO.class, baseLinkInfos);
@@ -54,7 +52,7 @@ public class ShortLinkController {
      */
     @PostMapping("/api/short-link/admin/v1/update")
     public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO requestParam) {
-        shortLinkRemoteService.updateShortLink(requestParam);
+        shortLinkActualRemoteService.updateShortLink(requestParam);
         return Results.success();
     }
 
@@ -62,8 +60,8 @@ public class ShortLinkController {
      * 分页查询短链接
      */
     @GetMapping("/api/short-link/admin/v1/page")
-    public Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO shortLinkPageReqDTO) {
-        return shortLinkRemoteService.pageShortLink(shortLinkPageReqDTO);
+    public Result<Page<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO shortLinkPageReqDTO) {
+        return shortLinkActualRemoteService.pageShortLink(shortLinkPageReqDTO.getGid(), shortLinkPageReqDTO.getOrderTag(), shortLinkPageReqDTO.getCurrent(), shortLinkPageReqDTO.getSize());
     }
 
     /**
@@ -71,7 +69,7 @@ public class ShortLinkController {
      */
     @GetMapping("/api/short-link/admin/v1/count")
     public Result<List<ShortLinkGroupCountQueryRespDTO>> listGroupShortLinkCount(@RequestParam("gids") List<String> gids) {
-        return shortLinkRemoteService.listGroupShortLinkCount(gids);
+        return shortLinkActualRemoteService.listGroupShortLinkCount(gids);
     }
 
     /**
@@ -79,41 +77,6 @@ public class ShortLinkController {
      */
     @GetMapping("/api/short-link/admin/v1/title")
     public Result<String> getTitleByUrl(@RequestParam("url") String url) {
-        return shortLinkRemoteService.getTitleByUrl(url);
-    }
-
-    /**
-     * 删除短链接到回收站
-     */
-    @PostMapping("/api/short-link/admin/v1/recycle-bin/save")
-    public Result<Void> saveRecycleBin(@RequestBody RecycleBinSaveReqDTO recycleBinSaveReqDTO) {
-        return shortLinkRemoteService.saveRecycleBin(recycleBinSaveReqDTO);
-    }
-
-    /**
-     * 短链接回收站分页查询
-     */
-    @GetMapping("/api/short-link/admin/v1/recycle-bin/page")
-    public Result<IPage<ShortLinkPageRespDTO>> pageRecycleBinShortLink(ShortLinkRecycleBinPageReqDTO shortLinkRecycleBinPageReqDTO) {
-        return recycleBinService.pageRecycleBinShortLink(shortLinkRecycleBinPageReqDTO);
-    }
-
-    /**
-     * 回收站恢复短链接
-     */
-    @PostMapping("/api/short-link/admin/v1/recycle-bin/recover")
-    public Result<Void> recoverRecycleBin(@RequestBody RecycleBinRecoverReqDTO recycleBinRecoverReqDTO) {
-        shortLinkRemoteService.recoverRecycleBin(recycleBinRecoverReqDTO);
-        return Results.success();
-    }
-
-
-    /**
-     * 回收站删除短链接
-     */
-    @PostMapping("/api/short-link/admin/v1/recycle-bin/remove")
-    public Result<Void> removeRecycleBin(@RequestBody RecycleBinRemoveReqDTO recycleBinRemoveReqDTO) {
-        shortLinkRemoteService.removeRecycleBin(recycleBinRemoveReqDTO);
-        return Results.success();
+        return shortLinkActualRemoteService.getTitleByUrl(url);
     }
 }
