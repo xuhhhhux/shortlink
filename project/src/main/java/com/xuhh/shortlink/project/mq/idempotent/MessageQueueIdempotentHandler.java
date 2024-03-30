@@ -18,7 +18,7 @@ public class MessageQueueIdempotentHandler {
      * @param id
      * @return
      */
-    public boolean isMessageProceed(String id) {
+    public boolean isMessageProcessed(String id) {
         Boolean ok = stringRedisTemplate.opsForValue().setIfAbsent(IDEMPOTENT_KEY_PREFIX + id, "0", 2, TimeUnit.MINUTES);
         return Boolean.TRUE.equals(ok);
     }
@@ -28,7 +28,7 @@ public class MessageQueueIdempotentHandler {
      * @param id
      * @return
      */
-    public boolean isFinish(String id) {
+    public boolean isAccomplish(String id) {
         String ok = stringRedisTemplate.opsForValue().get(IDEMPOTENT_KEY_PREFIX + id);
         return Objects.equals(ok, "1");
     }
@@ -37,7 +37,7 @@ public class MessageQueueIdempotentHandler {
      * 设置消息完成
      * @param id
      */
-    public void setFinish(String id) {
+    public void setAccomplish(String id) {
         stringRedisTemplate.opsForValue().set(IDEMPOTENT_KEY_PREFIX + id, "1", 2, TimeUnit.MINUTES);
     }
 
