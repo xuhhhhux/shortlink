@@ -13,33 +13,32 @@ import com.xuhh.shortlink.project.dao.entity.*;
 import com.xuhh.shortlink.project.dao.mapper.*;
 import com.xuhh.shortlink.project.dto.biz.ShortLinkStatsRecordDTO;
 import com.xuhh.shortlink.project.mq.idempotent.MessageQueueIdempotentHandler;
-import com.xuhh.shortlink.project.mq.producer.DelayShortLinkStatsProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
+import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.redisson.api.RLock;
 import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.connection.stream.MapRecord;
-import org.springframework.data.redis.connection.stream.RecordId;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.stream.StreamListener;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import static com.xuhh.shortlink.project.common.constant.RedisConstant.LOCK_GID_UPDATE_KEY;
 import static com.xuhh.shortlink.project.common.constant.ShortLinkConstant.AMAP_REMOTE_URL;
 
-
-/**
- * 短链接监控状态保存消息队列消费者
- * 公众号：马丁玩编程，回复：加群，添加马哥微信（备注：link）获取项目资料
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRecord<String, String, String>> {
+@RocketMQMessageListener(
+        topic = "${rocketmq.producer.topic}",
+        consumerGroup = "${rocketmq.consumer.group}"
+)
+public class ShortLinkStatsSaveConsumer implements RocketMQListener<Map<String, String>> {
 
     private final ShortLinkMapper shortLinkMapper;
     private final ShortLinkGotoMapper shortLinkGotoMapper;
@@ -52,49 +51,40 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
     private final LinkDeviceStatsMapper linkDeviceStatsMapper;
     private final LinkNetworkStatsMapper linkNetworkStatsMapper;
     private final LinkStatsTodayMapper linkStatsTodayMapper;
-    private final DelayShortLinkStatsProducer delayShortLinkStatsProducer;
-    private final StringRedisTemplate stringRedisTemplate;
     private final MessageQueueIdempotentHandler messageQueueIdempotentHandler;
 
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLocaleAmapKey;
 
     @Override
-    public void onMessage(MapRecord<String, String, String> message) {
-        String stream = message.getStream();
-        RecordId id = message.getId();
-
-        if (!messageQueueIdempotentHandler.isMessageProceed(id.toString())) {
-            if (messageQueueIdempotentHandler.isMessageProceed(id.toString())) {
+    public void onMessage(Map<String, String> producerMap) {
+        String keys = producerMap.get("keys");
+        if (!messageQueueIdempotentHandler.isMessageProcessed(keys)) {
+            // 判断当前的这个消息流程是否执行完成
+            if (messageQueueIdempotentHandler.isAccomplish(keys)) {
                 return;
             }
-            throw new ServiceException("消息未完成消费，需要消息队列重试");
+            throw new ServiceException("消息未完成流程，需要消息队列重试");
         }
-
         try {
-            Map<String, String> producerMap = message.getValue();
             String fullShortUrl = producerMap.get("fullShortUrl");
             if (StrUtil.isNotBlank(fullShortUrl)) {
                 String gid = producerMap.get("gid");
                 ShortLinkStatsRecordDTO statsRecord = JSON.parseObject(producerMap.get("statsRecord"), ShortLinkStatsRecordDTO.class);
                 actualSaveShortLinkStats(fullShortUrl, gid, statsRecord);
             }
-            stringRedisTemplate.opsForStream().delete(Objects.requireNonNull(stream), id.getValue());
         } catch (Throwable ex) {
-            messageQueueIdempotentHandler.delMessageProceed(id.toString());
-            log.error("短链接监控消息队列消费出现异常: {}", ex.getMessage());
+            log.error("记录短链接监控消费异常", ex);
+            throw ex;
         }
-        messageQueueIdempotentHandler.setFinish(id.toString());
+        messageQueueIdempotentHandler.setAccomplish(keys);
     }
 
     public void actualSaveShortLinkStats(String fullShortUrl, String gid, ShortLinkStatsRecordDTO statsRecord) {
         fullShortUrl = Optional.ofNullable(fullShortUrl).orElse(statsRecord.getFullShortUrl());
         RReadWriteLock readWriteLock = redissonClient.getReadWriteLock(String.format(LOCK_GID_UPDATE_KEY, fullShortUrl));
         RLock rLock = readWriteLock.readLock();
-        if (!rLock.tryLock()) {
-            delayShortLinkStatsProducer.send(statsRecord);
-            return;
-        }
+        rLock.lock();
         try {
             if (StrUtil.isBlank(gid)) {
                 LambdaQueryWrapper<ShortLinkGotoDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkGotoDO.class)
