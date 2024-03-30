@@ -385,12 +385,12 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         boolean contains = shortLinkCreateCachePenetrationBloomFilter.contains(fullShortUrl);
         if (!contains) {
             response.sendRedirect("/page/notfound");
-            // TODO 布隆过滤器误判
             return;
         }
 
         String isNull = stringRedisTemplate.opsForValue().get(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl));
         if (isNull != null) {
+            response.sendRedirect("/page/notfound");
             return;
         }
 
